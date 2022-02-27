@@ -97,7 +97,7 @@ public class ShowManager {
     //f
     public void showAllProducersWithThemProducts() {
         var producers = store.getProducersWithThemProducts();
-        ArrayList<Product> mapValue;
+        List<Product> mapValue;
 
         System.out.println("__________");
         for (String s : producers.keySet()) {

@@ -4,9 +4,10 @@ import data.util.BinaryFileExecutor;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class Store extends ProductFilter {
-    private final Map<String, ArrayList<Product>> producersAndProducts;
+    private final Map<String, List<Product>> producersAndProducts;
     private final Set<String> producers;
 
     public Store() {
@@ -33,8 +34,8 @@ public final class Store extends ProductFilter {
     private void initProductId() {
         try {
             Product.setCountOfProducts(
-                    super.getProducts().stream().max(
-                            Comparator.comparing(Product::getId)).get().getId());
+                    super.getProducts().stream()
+                            .max(Comparator.comparing(Product::getId)).get().getId());
         } catch (NoSuchElementException ignored) {
             // ignored
         }
@@ -54,24 +55,18 @@ public final class Store extends ProductFilter {
         }
     }
 
-    private ArrayList<Product> searchProducts(String producerName) {
+    private List<Product> searchProducts(String producerName) {
         List<Product> allProducts = super.getProducts();
-        ArrayList<Product> filterProducts = new ArrayList<>();
-
-        for (Product product : allProducts) {
-            if (product.getProducer().equals(producerName)) {
-                filterProducts.add(product);
-            }
-        }
-
-        return filterProducts;
+        return allProducts.stream()
+                .filter(product -> product.getProducer().equals(producerName))
+                .collect(Collectors.toList());
     }
 
     private void save() {
         BinaryFileExecutor.saveProductsToFile(super.getProducts());
     }
 
-    public Map<String, ArrayList<Product>> getProducersWithThemProducts() {
+    public Map<String, List<Product>> getProducersWithThemProducts() {
         return producersAndProducts;
     }
 
