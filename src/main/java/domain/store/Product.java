@@ -4,7 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 
-public class Product implements Serializable {
+public class Product implements Serializable, Comparable<Product> {
     @Serial
     private static final long serialVersionUID = 1337;
     private static int countProducts = 0;
@@ -25,6 +25,26 @@ public class Product implements Serializable {
         this.shelfLife = shelfLife;
         this.count = count;
         this.price = cost * count;
+    }
+
+    @Override
+    public int compareTo(Product o) {
+        // == return 0
+        // > return 1
+        // < return - 1
+
+        if (price > o.price) {
+            return 1;
+        } else if (price < o.price) {
+            return -1;
+        }
+
+        if (cost > o.cost) {
+            return 1;
+        } else if (cost < o.cost) {
+            return -1;
+        }
+        return 0;
     }
 
     public String toString() {

@@ -4,28 +4,31 @@ import data.util.BinaryFileExecutor;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public final class Store extends ProductFilter {
-    private final Map<String, List<Product>> producersAndProducts;
+public final class Store {
+    private final List<Product> products;
     private final Set<String> producers;
+    private final Map<String, ArrayList<Product>> producersAndProducts;
+    private final ProductFilter productsFilter;
 
     public Store() {
-        super(BinaryFileExecutor.readFile());
+        products = new ArrayList<>(BinaryFileExecutor.readFile());
+        producers = new HashSet<>();
         producersAndProducts = new HashMap<>();
-        producers = new HashSet<>(producersAndProducts.keySet());
+        productsFilter = new ProductFilter(products);
+
         update();
         initProductId();
     }
 
     public void addProduct(String name, String producer, int cost, LocalDate shelfLife, int count) {
-        super.getProducts().add(new Product(name, producer, cost, shelfLife, count));
+        products.add(new Product(name, producer, cost, shelfLife, count));
         save();
         update();
     }
 
     public void deleteProduct(int id) {
-        super.getProducts().removeIf(s -> s.getId() == id);
+        products.removeIf(s -> s.getId() == id);
         BinaryFileExecutor.deleteProduct(id);
         update();
         save();
@@ -34,43 +37,77 @@ public final class Store extends ProductFilter {
     private void initProductId() {
         try {
             Product.setCountOfProducts(
-                    super.getProducts().stream()
-                            .max(Comparator.comparing(Product::getId)).get().getId());
+                    products.stream().max(
+                            Comparator.comparing(Product::getId)).get().getId());
         } catch (NoSuchElementException ignored) {
             // ignored
         }
     }
 
     private void update() {
-        searchProducersAndProducts();
-        producers.addAll(producersAndProducts.keySet());
+        searchProducers();
+        searchProducersWithProducts();
     }
 
-    private void searchProducersAndProducts() {
-        var products = super.getProducts();
+    private void searchProducers() {
+        for (Product product : products) {
+            producers.add(product.getProducer());
+        }
+    }
 
+    private void searchProducersWithProducts() {
         producersAndProducts.clear();
         for (Product product : products) {
             producersAndProducts.put(product.getProducer(), searchProducts(product.getProducer()));
         }
     }
 
-    private List<Product> searchProducts(String producerName) {
-        List<Product> allProducts = super.getProducts();
-        return allProducts.stream()
-                .filter(product -> product.getProducer().equals(producerName))
-                .collect(Collectors.toList());
+    private ArrayList<Product> searchProducts(String producerName) {
+        ArrayList<Product> filterProducts = new ArrayList<>();
+        for (Product product : products) {
+            if (product.getProducer().equals(producerName)) {
+                filterProducts.add(product);
+            }
+        }
+
+        return filterProducts;
     }
 
     private void save() {
-        BinaryFileExecutor.saveProductsToFile(super.getProducts());
+        BinaryFileExecutor.saveProductsToFile(products);
     }
 
-    public Map<String, List<Product>> getProducersWithThemProducts() {
-        return producersAndProducts;
+    public List<Product> getProducts() {
+        return products;
     }
 
+    // a
+    public List<Product> getAllSortedByShelfLifeWithName(String name) {
+        return productsFilter.getAllSortedByShelfLifeWithName(name);
+    }
+
+    // b
+    public List<Product> getProductsWithNameAndCostALess(String name, int maxCost) {
+        return productsFilter.getProductsWithNameAndCostALess(name, maxCost);
+    }
+
+    // c
+    public List<Product> getAllWithShelfLifeALong(LocalDate minShelfLife) {
+        return productsFilter.getAllWithShelfLifeALong(minShelfLife);
+    }
+
+    // d
+    public List<Product> getAllSortedByPrice() {
+        return productsFilter.getAllSortedByPrice();
+    }
+
+    // e
     public Set<String> getProducers() {
         return producers;
+    }
+
+    // f
+    public Map<String, ArrayList<Product>> getProducersWithThemProducts() {
+        return producersAndProducts;
     }
 }
